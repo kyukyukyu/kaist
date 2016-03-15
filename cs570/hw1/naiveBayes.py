@@ -14,7 +14,12 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     self.type = "naivebayes"
     self.k = 1 # this is the smoothing parameter, ** use it in your train method **
     self.automaticTuning = False # Look at this flag to decide whether to choose k automatically ** use this in your train method **
-    
+    #: List of features in data. Initialized in train().
+    self.features = None
+    #: List of log posteriors for test data, stored for grading. Initialized in
+    #: classify().
+    self.posteriors = None
+
   def setSmoothing(self, k):
     """
     This is used by the main method to change the smoothing parameter before training.
