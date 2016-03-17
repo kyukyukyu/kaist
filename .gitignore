@@ -1,0 +1,5 @@
+# Vim swap files
+**/.*.sw?
+
+# Rope project files
+**/.ropeproject
