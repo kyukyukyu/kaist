@@ -1,6 +1,8 @@
+from functools import reduce
 import util
 import classificationMethod
 import math
+import itertools
 
 class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
   """
@@ -19,6 +21,13 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     #: List of log posteriors for test data, stored for grading. Initialized in
     #: classify().
     self.posteriors = None
+    #: Counter of labels of training instances. i.e. c(y). cntLabel[y] is the
+    #: number of instances whose label is y.
+    self.cntLabel = util.Counter()
+    #: Counter of features and labels of training instances. i.e. c(f_i, y).
+    #: cntFeatLabel[(feat, y)] is the number of instances whose value of feat is
+    #: 1 and label is y.
+    self.cntFeatLabel = util.Counter()
 
   def setSmoothing(self, k):
     """
@@ -54,9 +63,29 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     To get the list of all possible features or labels, use self.features and
     self.legalLabels.
     """
+    for tDatum, tLabel in itertools.izip(trainingData, trainingLabels):
+      assert tLabel in self.legalLabels
+      self.cntLabel[tLabel] += 1
+      for fKey, fValue in tDatum.iteritems():
+        if 1 == fValue:
+          self.cntFeatLabel[(fKey, tLabel)] += 1
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Find the best smoothing parameter.
+    max_accuracy = 0.0
+    max_k = 0
+    nValidationData = len(validationData)
+    assert nValidationData > 0
+    for k in kgrid:
+        self.setSmoothing(k)
+        guesses = self.classify(validationData)
+        nCorrect = reduce(lambda n, lp: n + (1 if lp[0] == lp[1] else 0),
+                          itertools.izip(validationLabels, guesses),
+                          0)
+        accuracy = float(nCorrect) / float(nValidationData)
+        if max_accuracy < accuracy:
+            max_accuracy = accuracy
+            max_k = k
+    self.setSmoothing(max_k)
 
   def classify(self, testData):
     """
