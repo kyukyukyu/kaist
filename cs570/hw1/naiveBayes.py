@@ -1,8 +1,10 @@
 from functools import reduce
-import util
-import classificationMethod
-import math
 import itertools
+import math
+
+import classificationMethod
+import util
+
 
 class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
   """
@@ -113,4 +115,3 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     util.raiseNotDefined()
 
     return logJoint
-
