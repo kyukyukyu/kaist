@@ -111,7 +111,42 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     """
     logJoint = util.Counter()
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # P(Label = y, datum)
+    #   = P(Label = y) * P(datum | Label = y) (by Bayes rule)
+    #   = P(Label = y) * P(F_1 = f_1 | Label = y) * P(F_2 = f_2 | Label = y) *
+    #                    ... * P(F_D = f_D | Label = y) (conditional indep.)
+    #   = (n_y / n) * ((c(f_1, y) + k) / (n_y + 2 * k)) *
+    #                 ((c(f_2, y) + k) / (n_y + 2 * k)) *
+    #                 ... *
+    #                 ((c(f_D, y) + k) / (n_y + 2 * k))
+    #     (There are only two possible values for one feature. Thus, 2 * k.)
+    #
+    # where n is the number of instances in training set,
+    # n_y is the number of instances with label y in training set,
+    # c(f_i, y) is the number of instances whose value of feature F_i is f_i and
+    # label is y in training set,
+    # D is the number of features in a datum, ('D' from 'dimension')
+    # and k is smoothing parameter.
+    #
+    # Hence, in log-probability,
+    #
+    # log(P(Label = y, datum))
+    #   = log(n_y / n) + log(c(f_1, y) + k) + log(c(f_2, y) + k) + ... +
+    #     log(c(f_D, y) + k) - D * log(n_y + 2 * k)
+    n = float(self.cntLabel.totalCount())
+    d = len(self.features)
+    k = self.k
+    for y in self.legalLabels:
+      n_y = self.cntLabel[y]
+      logPrior = math.log(float(n_y) / n)
+      logCounts = 0
+      for f in self.features:
+        counts = 0
+        if 1 == datum[f]:
+          counts = self.cntFeatLabel[(f, y)]
+        else:
+          counts = n_y - self.cntFeatLabel[(f, y)]
+        logCounts += math.log(counts + k)
+      logJoint[y] = logPrior + logCounts - d * math.log(n_y + k + k)
 
     return logJoint
