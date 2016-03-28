@@ -13,6 +13,30 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
   def __init__(self, legalLabels, type):
     self.legalLabels = legalLabels
     self.type = type
+    #: Function used for computing log joint probability. Used like
+    #: logJointProbFunc(data), where data is (N x D)-sized numpy array, N is the
+    #: number of instances, and D is the number of features. Note that this is
+    #: initialized with None at first.
+    self.logJointProbFunc = None
+    #: Covariance matrix for all of training instances. Will be defined in
+    #: trainAndTune().
+    self.totalCovariance = None
+    #: Precision matrix for all of training instances. Declared for speed-up.
+    #: Also will be defined in trainAndTune().
+    self.totalPrecision = None
+    #: Mapping from labels to their priors. Also will be defined in
+    #: trainAndTune().
+    self.prior = dict()
+    #: Mapping from labels to the mean vectors of instances with corresponding
+    #: label. Also will be defined in trainAndTune().
+    self.mean = dict()
+    #: Mapping from labels to the covariance matrices of instances with
+    #: corresponding label. Also will be defined in trainAndTune().
+    self.covariance = dict()
+    #: Mapping from labels to the precision matrices of instances with
+    #: corresponding label. Declared for speed-up. Also will be defined in
+    #: trainAndTune().
+    self.precision = dict()
 
   def train(self, trainingData, trainingLabels, validationData, validationLabels):
     """
