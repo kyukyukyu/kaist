@@ -56,7 +56,7 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     - N : the number of training instances
     - M : the number of validation instances
     - D : the number of features (PCA was used for feature extraction)
-    
+
     Train the classifier by estimating MLEs.
     Evaluate LDA and QDA respectively and select the model that gives
     higher accuracy on the validationData.
@@ -120,14 +120,14 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
       self.posteriors.append(logposterior)
 
     return guesses
-    
+
   def calculateLogJointProbabilities(self, datum):
     """
     datum: D-sized numpy array
     - D : the number of features (PCA was used for feature extraction)
 
     Returns the log-joint distribution over legal labels and the datum.
-    Each log-probability should be stored in the list, e.g.    
+    Each log-probability should be stored in the list, e.g.
     logJoint[3] = <Estimate of log( P(Label = 3, datum) )>
     """
     logJoint = [self.logJointProbFunc(datum, c) for c in self.legalLabels]
