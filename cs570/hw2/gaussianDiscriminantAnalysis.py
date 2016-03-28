@@ -59,10 +59,37 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     Evaluate LDA and QDA respectively and select the model that gives
     higher accuracy on the validationData.
     """
+    #: Mapping of labels to the lists of instances with corresponding label.
+    data = {label: [] for label in self.legalLabels}
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    N = trainingData.shape[0]
+    self.totalCovariance = np.cov(trainingData, rowvar=0)
+    self.totalPrecision = self.totalCovariance.T
 
+    # It turns out that the result of MLE for mean and covariance parameters of
+    # each label are the mean and the covariance of training instances of each
+    # label. Thus, group instances by their label and use these groups to
+    # compute the label priors and mean and covariance of training instances of
+    # each label.
+    for tDatum, tLabel in zip(trainingData, trainingLabels):
+      data[tLabel].append(tDatum)
+    for label, dataLabel in data.iteritems():
+      self.prior[label] = float(len(dataLabel)) / float(N)
+      self.mean[label] = np.mean(dataLabel, axis=0)
+      self.covar[label] = np.cov(dataLabel, rowvar=0)
+      self.precision[label] = self.covar[label].T
+
+    # Try LDA and QDA once for each.
+    self.logJointProbFunc = self.calcLogJointProbLDA
+    guessesLDA = self.classify(validationData)
+    accuracyLDA = self.calcAccuracy(validationLabels, guessesLDA)
+    self.logJointProbFunc = self.calcLogJointProbQDA
+    guessesQDA = self.classify(validationData)
+    accuracyQDA = self.calcAccuracy(validationLabels, guessesQDA)
+    if accuracyLDA >= accuracyQDA:
+      self.logJointProbFunc = self.calcLogJointProbLDA
+    else:
+      self.logJointProbFunc = self.calcLogJointProbQDA
 
   def classify(self, testData):
     """
