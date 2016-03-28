@@ -14,9 +14,9 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     self.legalLabels = legalLabels
     self.type = type
     #: Function used for computing log joint probability. Used like
-    #: logJointProbFunc(data), where data is (N x D)-sized numpy array, N is the
-    #: number of instances, and D is the number of features. Note that this is
-    #: initialized with None at first.
+    #: logJointProbFunc(datum, y), where datum is a 1-D numpy array with
+    #: features, and y is the label. Note that this is initialized with None
+    #: at first.
     self.logJointProbFunc = None
     #: Covariance matrix for all of training instances. Will be defined in
     #: trainAndTune().
