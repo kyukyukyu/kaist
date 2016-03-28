@@ -126,9 +126,5 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     Each log-probability should be stored in the list, e.g.    
     logJoint[3] = <Estimate of log( P(Label = 3, datum) )>
     """
-    logJoint = [0 for c in self.legalLabels]
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    
+    logJoint = [self.logJointProbFunc(datum, c) for c in self.legalLabels]
     return logJoint
