@@ -4,6 +4,7 @@ Created on Fri Mar 18 19:48:36 2016
 
 @author: jmlee
 """
+import itertools
 import sys
 import classificationMethod
 import numpy as np
@@ -90,6 +91,16 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
       self.logJointProbFunc = self.calcLogJointProbLDA
     else:
       self.logJointProbFunc = self.calcLogJointProbQDA
+
+  @staticmethod
+  def calcAccuracy(expectedLabels, actualLabels):
+    if len(expectedLabels) != len(actualLabels):
+      raise ValueError('Two lists of labels have different length')
+    nCorrect = 0
+    for el, al in itertools.izip(expectedLabels, actualLabels):
+      if el == al:
+        nCorrect += 1
+    return float(nCorrect) / float(len(expectedLabels))
 
   def classify(self, testData):
     """
