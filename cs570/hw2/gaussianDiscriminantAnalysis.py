@@ -5,6 +5,7 @@ Created on Fri Mar 18 19:48:36 2016
 @author: jmlee
 """
 import itertools
+import math
 import sys
 import classificationMethod
 import numpy as np
@@ -128,3 +129,29 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     """
     logJoint = [self.logJointProbFunc(datum, c) for c in self.legalLabels]
     return logJoint
+
+  def calcLogJointProbLDA(self, datum, y):
+    """
+    Calculates log joint probability of given datum and label using LDA model.
+    """
+
+    pi = self.prior[y]
+    mu = self.mean[y]
+    lmda = self.totalPrecision
+    beta = np.dot(lmda, mu)
+    gamma = -0.5 * np.dot(np.dot(mu, lmda), mu) + math.log(pi)
+    return math.exp(np.dot(beta, datum) + gamma)
+
+  def calcLogJointProbQDA(self, datum, y):
+    """
+    Calculates log joint probability of given datum and label using QDA model.
+    """
+
+    D = datum.shape[0]
+    pi = self.prior[y]
+    mu = self.mean[y]
+    sigma = self.covariance[y]
+    lmda = self.precision[y]
+    z = datum - mu
+    return ((1 / (2 * math.pi) ** (D / 2) * math.sqrt(np.linalg.det(sigma))) *
+            math.exp(-0.5 * np.dot(np.dot(z, lmda), z)) * pi)
