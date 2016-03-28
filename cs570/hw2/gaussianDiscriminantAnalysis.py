@@ -32,13 +32,13 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     #: Mapping from labels to the mean vectors of instances with corresponding
     #: label. Also will be defined in trainAndTune().
     self.mean = dict()
-    #: Mapping from labels to the covariance matrices of instances with
-    #: corresponding label. Also will be defined in trainAndTune().
-    self.covariance = dict()
     #: Mapping from labels to the precision matrices of instances with
     #: corresponding label. Declared for speed-up. Also will be defined in
     #: trainAndTune().
     self.precision = dict()
+    #: Mapping from labels to the constant coefficient in log joint probability
+    #: formula for corresponding label. Also will be defined in trainAndTune().
+    self.qdaCoeff = dict()
 
   def train(self, trainingData, trainingLabels, validationData, validationLabels):
     """
@@ -64,7 +64,7 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     #: Mapping of labels to the lists of instances with corresponding label.
     data = {label: [] for label in self.legalLabels}
 
-    N = trainingData.shape[0]
+    N, D = trainingData.shape
     self.totalCovariance = np.cov(trainingData, rowvar=0)
     self.totalPrecision = self.totalCovariance.T
 
@@ -75,11 +75,14 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     # each label.
     for tDatum, tLabel in zip(trainingData, trainingLabels):
       data[tLabel].append(tDatum)
+
+    qdaCoeffBase = 1 / (2 * math.pi) ** (D / 2)
     for label, dataLabel in data.iteritems():
       self.prior[label] = float(len(dataLabel)) / float(N)
       self.mean[label] = np.mean(dataLabel, axis=0)
-      self.covar[label] = np.cov(dataLabel, rowvar=0)
-      self.precision[label] = self.covar[label].T
+      covariance = np.cov(dataLabel, rowvar=0)
+      self.precision[label] = covariance.T
+      self.qdaCoeff[label] = qdaCoeffBase / math.sqrt(np.linalg.det(covariance))
 
     # Try LDA and QDA once for each.
     self.logJointProbFunc = self.calcLogJointProbLDA
@@ -150,8 +153,7 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     D = datum.shape[0]
     pi = self.prior[y]
     mu = self.mean[y]
-    sigma = self.covariance[y]
     lmda = self.precision[y]
+    coeff = self.qdaCoeff[y]
     z = datum - mu
-    return ((1 / (2 * math.pi) ** (D / 2) * math.sqrt(np.linalg.det(sigma))) *
-            math.exp(-0.5 * np.dot(np.dot(z, lmda), z)) * pi)
+    return (coeff * math.exp(-0.5 * np.dot(np.dot(z, lmda), z)) * pi)
