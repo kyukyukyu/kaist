@@ -143,17 +143,17 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     lmda = self.totalPrecision
     beta = np.dot(lmda, mu)
     gamma = -0.5 * np.dot(np.dot(mu, lmda), mu) + math.log(pi)
-    return math.exp(np.dot(beta, datum) + gamma)
+    return (np.dot(beta, datum) + gamma)
 
   def calcLogJointProbQDA(self, datum, y):
     """
     Calculates log joint probability of given datum and label using QDA model.
     """
 
-    D = datum.shape[0]
     pi = self.prior[y]
     mu = self.mean[y]
     lmda = self.precision[y]
     coeff = self.qdaCoeff[y]
     z = datum - mu
-    return (coeff * math.exp(-0.5 * np.dot(np.dot(z, lmda), z)) * pi)
+    return (math.log(coeff) + (-0.5 * np.dot(np.dot(z, lmda), z)) +
+            math.log(pi))
