@@ -20,11 +20,9 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     #: features, and y is the label. Note that this is initialized with None
     #: at first.
     self.logJointProbFunc = None
-    #: Covariance matrix for all of training instances. Will be defined in
-    #: trainAndTune().
-    self.totalCovariance = None
-    #: Precision matrix for all of training instances. Declared for speed-up.
-    #: Also will be defined in trainAndTune().
+    #: Precision matrix for all of training instances. Declared instead of
+    #: covariance matrix since using precision matrix only is enough when
+    #: computing log joint probabilities. Will be defined in trainAndTune().
     self.totalPrecision = None
     #: Mapping from labels to their priors. Also will be defined in
     #: trainAndTune().
@@ -65,8 +63,8 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     data = {label: [] for label in self.legalLabels}
 
     N, D = trainingData.shape
-    self.totalCovariance = np.cov(trainingData, rowvar=0)
-    self.totalPrecision = np.linalg.inv(self.totalCovariance)
+    totalCovariance = np.cov(trainingData, rowvar=0)
+    self.totalPrecision = np.linalg.inv(totalCovariance)
 
     # It turns out that the result of MLE for mean and covariance parameters of
     # each label are the mean and the covariance of training instances of each
