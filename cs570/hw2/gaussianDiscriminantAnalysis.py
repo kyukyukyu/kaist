@@ -24,9 +24,9 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     #: covariance matrix since using precision matrix only is enough when
     #: computing log joint probabilities. Will be defined in trainAndTune().
     self.totalPrecision = None
-    #: Mapping from labels to their priors. Also will be defined in
+    #: Mapping from labels to their log priors. Also will be defined in
     #: trainAndTune().
-    self.prior = dict()
+    self.logPrior = dict()
     #: Mapping from labels to the mean vectors of instances with corresponding
     #: label. Also will be defined in trainAndTune().
     self.mean = dict()
@@ -34,9 +34,10 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     #: corresponding label. Declared for speed-up. Also will be defined in
     #: trainAndTune().
     self.precision = dict()
-    #: Mapping from labels to the constant coefficient in log joint probability
-    #: formula for corresponding label. Also will be defined in trainAndTune().
-    self.qdaCoeff = dict()
+    #: Mapping from labels to the log constant in log joint probability
+    #: formula for corresponding label based on QDA. Also will be defined in
+    #: trainAndTune().
+    self.qdaLogConstant = dict()
 
   def train(self, trainingData, trainingLabels, validationData, validationLabels):
     """
@@ -78,11 +79,14 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     for label, dataLabel in data.iteritems():
       nLabel = len(dataLabel)
       dataArray = np.array(dataLabel)
-      self.prior[label] = float(nLabel) / float(N)
+      logPrior = math.log(float(nLabel) / float(N))
+      self.logPrior[label] = logPrior
       self.mean[label] = np.mean(dataArray, axis=0)
       covariance = np.cov(dataArray, rowvar=0)
       self.precision[label] = np.linalg.inv(covariance)
-      self.qdaCoeff[label] = qdaCoeffBase / math.sqrt(np.linalg.det(covariance))
+      self.qdaLogConstant[label] = (
+        math.log(qdaCoeffBase / math.sqrt(np.linalg.det(covariance))) +
+        logPrior)
 
     # Try LDA and QDA once for each.
     self.logJointProbFunc = self.calcLogJointProbLDA
@@ -138,11 +142,11 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     Calculates log joint probability of given datum and label using LDA model.
     """
 
-    pi = self.prior[y]
+    logPi = self.logPrior[y]
     mu = self.mean[y]
     lmda = self.totalPrecision
     beta = np.dot(lmda, mu)
-    gamma = -0.5 * np.dot(np.dot(mu, lmda), mu) + math.log(pi)
+    gamma = -0.5 * np.dot(np.dot(mu, lmda), mu) + logPi
     return (np.dot(beta, datum) + gamma)
 
   def calcLogJointProbQDA(self, datum, y):
@@ -150,10 +154,8 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     Calculates log joint probability of given datum and label using QDA model.
     """
 
-    pi = self.prior[y]
     mu = self.mean[y]
     lmda = self.precision[y]
-    coeff = self.qdaCoeff[y]
+    logConstant = self.qdaLogConstant[y]
     z = datum - mu
-    return (math.log(coeff) + (-0.5 * np.dot(np.dot(z, lmda), z)) +
-            math.log(pi))
+    return (logConstant + (-0.5 * np.dot(np.dot(z, lmda), z)))
