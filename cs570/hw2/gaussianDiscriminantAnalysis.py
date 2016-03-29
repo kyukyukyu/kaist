@@ -66,7 +66,7 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
 
     N, D = trainingData.shape
     self.totalCovariance = np.cov(trainingData, rowvar=0)
-    self.totalPrecision = self.totalCovariance.T
+    self.totalPrecision = np.linalg.inv(self.totalCovariance)
 
     # It turns out that the result of MLE for mean and covariance parameters of
     # each label are the mean and the covariance of training instances of each
@@ -76,12 +76,14 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     for tDatum, tLabel in zip(trainingData, trainingLabels):
       data[tLabel].append(tDatum)
 
-    qdaCoeffBase = 1 / (2 * math.pi) ** (D / 2)
+    qdaCoeffBase = 1.0 / (2.0 * math.pi) ** (D / 2.0)
     for label, dataLabel in data.iteritems():
-      self.prior[label] = float(len(dataLabel)) / float(N)
-      self.mean[label] = np.mean(dataLabel, axis=0)
-      covariance = np.cov(dataLabel, rowvar=0)
-      self.precision[label] = covariance.T
+      nLabel = len(dataLabel)
+      dataArray = np.array(dataLabel)
+      self.prior[label] = float(nLabel) / float(N)
+      self.mean[label] = np.mean(dataArray, axis=0)
+      covariance = np.cov(dataArray, rowvar=0)
+      self.precision[label] = np.linalg.inv(covariance)
       self.qdaCoeff[label] = qdaCoeffBase / math.sqrt(np.linalg.det(covariance))
 
     # Try LDA and QDA once for each.
