@@ -20,10 +20,10 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     #: features, and y is the label. Note that this is initialized with None
     #: at first.
     self.logJointProbFunc = None
-    #: Precision matrix for all of training instances. Declared instead of
-    #: covariance matrix since using precision matrix only is enough when
-    #: computing log joint probabilities. Will be defined in trainAndTune().
-    self.totalPrecision = None
+    #: Shared precision matrix for LDA. Declared instead of covariance matrix
+    #: since using precision matrix only is enough when computing log joint
+    #: probabilities. Will be defined in trainAndTune().
+    self.sharedPrecision = None
     #: Mapping from labels to their log priors. Also will be defined in
     #: trainAndTune().
     self.logPrior = dict()
@@ -62,10 +62,10 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
     """
     #: Mapping of labels to the lists of instances with corresponding label.
     data = {label: [] for label in self.legalLabels}
+    #: Mapping of labels to covariance matrices.
+    covariance = dict()
 
     N, D = trainingData.shape
-    totalCovariance = np.cov(trainingData, rowvar=0)
-    self.totalPrecision = np.linalg.inv(totalCovariance)
 
     # It turns out that the result of MLE for mean and covariance parameters of
     # each label are the mean and the covariance of training instances of each
@@ -82,11 +82,18 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
       logPrior = math.log(float(nLabel) / float(N))
       self.logPrior[label] = logPrior
       self.mean[label] = np.mean(dataArray, axis=0)
-      covariance = np.cov(dataArray, rowvar=0)
-      self.precision[label] = np.linalg.inv(covariance)
+      covar = np.cov(dataArray, rowvar=0)
+      covariance[label] = covar
+      self.precision[label] = np.linalg.inv(covariance[label])
       self.qdaLogConstant[label] = (
-        math.log(qdaCoeffBase / math.sqrt(np.linalg.det(covariance))) +
+        math.log(qdaCoeffBase / math.sqrt(np.linalg.det(covar))) +
         logPrior)
+    # Calculate shared covariance and shared precision for LDA.
+    sharedCovariance = np.average([covariance[l] for l in self.legalLabels],
+                                  axis=0,
+                                  weights=[len(data[l]) for l
+                                                        in self.legalLabels])
+    self.sharedPrecision = np.linalg.inv(sharedCovariance)
 
     # Try LDA and QDA once for each.
     self.logJointProbFunc = self.calcLogJointProbLDA
@@ -144,7 +151,7 @@ class GaussianDiscriminantAnalysisClassifier(classificationMethod.Classification
 
     logPi = self.logPrior[y]
     mu = self.mean[y]
-    lmda = self.totalPrecision
+    lmda = self.sharedPrecision
     beta = np.dot(lmda, mu)
     gamma = -0.5 * np.dot(np.dot(mu, lmda), mu) + logPi
     return (np.dot(beta, datum) + gamma)
