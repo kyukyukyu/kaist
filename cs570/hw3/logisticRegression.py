@@ -4,6 +4,7 @@ Created on Sun Apr 18 2016
 
 @author: jphong
 """
+import itertools
 import classificationMethod
 import numpy as np
 import util
@@ -73,9 +74,19 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     - D : the number of features (PCA was used for feature extraction)
     - C : the number of legal labels
     """
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    cost = 0
+    grad = (np.zeros(self.W.shape), np.zeros(self.b.shape))
+    for x_i, y_i in itertools.izip(trainingData, trainingLabels):
+      Wx = np.dot(x_i, self.W)
+      m = np.max(Wx)
+      cost += ((Wx[y_i] - m) -
+               (np.log(np.sum(np.apply_over_axes(lambda a: np.exp(a - m),
+                                                 0, Wx)))))
+      for c in self.legalLabels:
+        mu = self.softmax(c, Wx, self.b)
+        coeff = mu - (1 if c == y_i else 0)
+        grad[0][:, c] += coeff * x_i
+        grad[1][c] += coeff
 
     return cost, grad
 
