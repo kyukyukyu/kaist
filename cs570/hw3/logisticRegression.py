@@ -21,6 +21,7 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     self.costs = []
     self.epoch = 1000
 
+    self.bestNCorrect = 0
     self.bestParam = None # You must fill in this variable in validateWeight
 
   def train(self, trainingData, trainingLabels, validationData, validationLabels):
@@ -123,11 +124,14 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     Choose the best parameters of logistic regression.
     Calculates the accuracy of the validation set to select the best parameters.
     """
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    self.bestParam = (self.W, self.b)
-
+    guesses = self.classify(validationData)
+    n_correct = 0
+    for expected, actual in zip(validationLabels, guesses):
+      if expected == actual:
+        n_correct += 1
+    if n_correct > self.bestNCorrect:
+      self.bestNCorrect = n_correct
+      self.bestParam = (self.W, self.b)
 
   def classify(self, testData):
     """
