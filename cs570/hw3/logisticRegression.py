@@ -108,9 +108,8 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     Update must include L2 regularization.
     Please note that bias parameter must not be regularized.
     """
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    self.W -= learningRate * (grad[0] + l2Reg * self.W)
+    self.b -= learningRate * grad[1]
 
   def validateWeight(self, validationData, validationLabels):
     """
