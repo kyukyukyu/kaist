@@ -54,6 +54,13 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     self.W = self.numpRng.uniform(-initBound, initBound, (featureCount, labelCount))
     self.b = self.numpRng.uniform(-initBound, initBound, (labelCount, ))
 
+  @staticmethod
+  def softmax(c, Wx, b):
+    Y = Wx + b
+    m = np.max(Y)
+    return (np.exp(Y[c] - m) /
+            np.sum(np.apply_along_axis(lambda a: np.exp(a - m), 0, Y)))
+
   def calculateCostAndGradient(self, trainingData, trainingLabels):
     """
     Fill in this function!
