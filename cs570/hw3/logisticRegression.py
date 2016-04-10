@@ -137,7 +137,7 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
       self.posteriors.append(logposterior)
 
     return guesses
-    
+
   def calculateConditionalProbability(self, datum):
     """
     datum : D-sized numpy array
@@ -146,10 +146,10 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     - C : the number of legal labels
 
     Returns the conditional probability p(y|x) to predict labels for the datum.
-    Return value is NOT the log of probability, which means 
+    Return value is NOT the log of probability, which means
     sum of your calculation should be 1. (sum_y p(y|x) = 1)
     """
-    
+
     bestW, bestb = self.bestParam # These are parameters used for calculating conditional probabilities
 
     "*** YOUR CODE HERE ***"
