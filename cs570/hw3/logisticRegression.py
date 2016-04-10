@@ -161,8 +161,6 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     """
 
     bestW, bestb = self.bestParam # These are parameters used for calculating conditional probabilities
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
+    Wx = np.dot(datum, bestW)
+    prob = [self.softmax(c, Wx, bestb) for c in self.legalLabels]
     return prob
