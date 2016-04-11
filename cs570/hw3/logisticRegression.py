@@ -124,6 +124,11 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     Choose the best parameters of logistic regression.
     Calculates the accuracy of the validation set to select the best parameters.
     """
+    # Function classify() calculates conditional probability based on
+    # self.bestParam. Therefore, for validation, it is required to set this to
+    # W and b of this epoch.
+    currBestParam = self.bestParam
+    self.bestParam = (self.W, self.b)
     guesses = self.classify(validationData)
     n_correct = 0
     for expected, actual in zip(validationLabels, guesses):
@@ -131,7 +136,8 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
         n_correct += 1
     if n_correct > self.bestNCorrect:
       self.bestNCorrect = n_correct
-      self.bestParam = (self.W, self.b)
+    else:
+      self.bestParam = currBestParam
 
   def classify(self, testData):
     """
