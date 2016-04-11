@@ -88,8 +88,8 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
       Wx = np.dot(x_i, self.W)
       m = np.max(Wx)
       cost += ((Wx[y_i] - m) -
-               (np.log(np.sum(np.apply_over_axes(lambda a: np.exp(a - m),
-                                                 0, Wx)))))
+               (np.log(np.sum(np.apply_along_axis(lambda a: np.exp(a[0] - m),
+                                                  0, Wx)))))
       for c in self.legalLabels:
         mu = self.softmax(c, Wx, self.b)
         coeff = mu - (1 if c == y_i else 0)
