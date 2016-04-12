@@ -4,7 +4,6 @@ Created on Sun Apr 18 2016
 
 @author: jphong
 """
-import itertools
 import classificationMethod
 import numpy as np
 import util
@@ -59,8 +58,8 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
   def softmax(c, Wx, b):
     Y = Wx + b
     m = np.max(Y)
-    return (np.exp(Y[c] - m) /
-            np.sum(np.apply_along_axis(lambda a: np.exp(a - m), 0, Y)))
+    Y_shifted = Y - m * np.ones(Y.shape)
+    return (np.exp(Y_shifted[c]) / np.sum(np.exp(Y_shifted)))
 
   def calculateCostAndGradient(self, trainingData, trainingLabels):
     """
@@ -82,19 +81,24 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     - D : the number of features (PCA was used for feature extraction)
     - C : the number of legal labels
     """
+    N, _ = trainingData.shape
     cost = 0
     grad = (np.zeros(self.W.shape), np.zeros(self.b.shape))
-    for x_i, y_i in itertools.izip(trainingData, trainingLabels):
-      Wx = np.dot(x_i, self.W)
+    XW = np.dot(trainingData, self.W)
+    i = 0
+    while i < N:
+      x_i = trainingData[i]
+      y_i = trainingLabels[i]
+      Wx = XW[i]
       m = np.max(Wx)
-      cost += ((Wx[y_i] - m) -
-               (np.log(np.sum(np.apply_along_axis(lambda a: np.exp(a[0] - m),
-                                                  0, Wx)))))
+      Wx_shifted = Wx - m * np.ones(Wx.shape)
+      cost += Wx_shifted[y_i] - np.log(np.sum(np.exp(Wx_shifted)))
       for c in self.legalLabels:
         mu = self.softmax(c, Wx, self.b)
         coeff = mu - (1 if c == y_i else 0)
         grad[0][:, c] += coeff * x_i
         grad[1][c] += coeff
+      i += 1
 
     return cost, grad
 
