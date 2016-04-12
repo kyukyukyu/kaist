@@ -58,7 +58,7 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
   def softmax(c, Wx, b):
     Y = Wx + b
     m = np.max(Y)
-    Y_shifted = Y - m * np.ones(Y.shape)
+    Y_shifted = Y - np.full_like(Y, m)
     return (np.exp(Y_shifted[c]) / np.sum(np.exp(Y_shifted)))
 
   def calculateCostAndGradient(self, trainingData, trainingLabels):
@@ -82,19 +82,22 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     - C : the number of legal labels
     """
     N, _ = trainingData.shape
+    C = len(self.legalLabels)
     cost = 0
     grad = (np.zeros(self.W.shape), np.zeros(self.b.shape))
     XW = np.dot(trainingData, self.W)
+    m = np.amax(XW, axis=1)
+    XW_shifted = XW - np.repeat(m, C).reshape((-1, C))
+    XW_shifted_exp = np.exp(XW_shifted)
     i = 0
     while i < N:
       x_i = trainingData[i]
       y_i = trainingLabels[i]
-      Wx = XW[i]
-      m = np.max(Wx)
-      Wx_shifted = Wx - m * np.ones(Wx.shape)
-      cost += Wx_shifted[y_i] - np.log(np.sum(np.exp(Wx_shifted)))
+      Wx_shifted = XW_shifted[i]
+      Wx_shifted_exp = XW_shifted_exp[i]
+      cost += Wx_shifted[y_i] - np.log(np.sum(Wx_shifted_exp))
       for c in self.legalLabels:
-        mu = self.softmax(c, Wx, self.b)
+        mu = self.softmax(c, XW[i], self.b)
         coeff = mu - (1 if c == y_i else 0)
         grad[0][:, c] += coeff * x_i
         grad[1][c] += coeff
