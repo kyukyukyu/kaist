@@ -74,10 +74,10 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     - D : the number of features (PCA was used for feature extraction)
     - C : the number of legal labels
     """
-    N, _ = trainingData.shape
+    N, D = trainingData.shape
     C = len(self.legalLabels)
     cost = 0
-    grad = (np.zeros(self.W.shape), np.zeros(self.b.shape))
+    grad = (np.zeros((C, D)), np.zeros(self.b.shape))
     XW = np.dot(trainingData, self.W)
     Y = XW + np.tile(self.b, (N, 1))
     m = np.amax(Y, axis=1)
@@ -94,7 +94,7 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
       for l in self.legalLabels:
         mu = y_shifted_exp_i[l] / sum_y_shifted_exp_i
         coeff = mu - (1 if l == label_i else 0)
-        grad[0][:, l] += coeff * x_i
+        grad[0][l] += coeff * x_i
         grad[1][l] += coeff
       i += 1
 
@@ -111,7 +111,7 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     Update must include L2 regularization.
     Please note that bias parameter must not be regularized.
     """
-    self.W -= learningRate * (grad[0] + l2Reg * self.W)
+    self.W -= learningRate * (grad[0].T + l2Reg * self.W)
     self.b -= learningRate * grad[1]
 
   def validateWeight(self, validationData, validationLabels):
