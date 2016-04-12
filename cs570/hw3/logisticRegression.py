@@ -54,13 +54,6 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     self.W = self.numpRng.uniform(-initBound, initBound, (featureCount, labelCount))
     self.b = self.numpRng.uniform(-initBound, initBound, (labelCount, ))
 
-  @staticmethod
-  def softmax(c, Wx, b):
-    Y = Wx + b
-    m = np.max(Y)
-    Y_shifted = Y - np.full_like(Y, m)
-    return (np.exp(Y_shifted[c]) / np.sum(np.exp(Y_shifted)))
-
   def calculateCostAndGradient(self, trainingData, trainingLabels):
     """
     Fill in this function!
@@ -86,21 +79,23 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     cost = 0
     grad = (np.zeros(self.W.shape), np.zeros(self.b.shape))
     XW = np.dot(trainingData, self.W)
-    m = np.amax(XW, axis=1)
-    XW_shifted = XW - np.repeat(m, C).reshape((-1, C))
-    XW_shifted_exp = np.exp(XW_shifted)
+    Y = XW + np.tile(self.b, (N, 1))
+    m = np.amax(Y, axis=1)
+    Y_shifted = Y - np.repeat(m, C).reshape((-1, C))
+    Y_shifted_exp = np.exp(Y_shifted)
     i = 0
     while i < N:
       x_i = trainingData[i]
-      y_i = trainingLabels[i]
-      Wx_shifted = XW_shifted[i]
-      Wx_shifted_exp = XW_shifted_exp[i]
-      cost += Wx_shifted[y_i] - np.log(np.sum(Wx_shifted_exp))
-      for c in self.legalLabels:
-        mu = self.softmax(c, XW[i], self.b)
-        coeff = mu - (1 if c == y_i else 0)
-        grad[0][:, c] += coeff * x_i
-        grad[1][c] += coeff
+      label_i = trainingLabels[i]
+      y_shifted_i = Y_shifted[i]
+      y_shifted_exp_i = Y_shifted_exp[i]
+      sum_y_shifted_exp_i = np.sum(y_shifted_exp_i)
+      cost += y_shifted_i[label_i] - np.log(sum_y_shifted_exp_i)
+      for l in self.legalLabels:
+        mu = y_shifted_exp_i[l] / sum_y_shifted_exp_i
+        coeff = mu - (1 if l == label_i else 0)
+        grad[0][:, l] += coeff * x_i
+        grad[1][l] += coeff
       i += 1
 
     return cost, grad
@@ -174,6 +169,12 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     """
 
     bestW, bestb = self.bestParam # These are parameters used for calculating conditional probabilities
+    C = len(self.legalLabels)
     Wx = np.dot(datum, bestW)
-    prob = [self.softmax(c, Wx, bestb) for c in self.legalLabels]
+    y = Wx + bestb
+    m = np.amax(y)
+    y_shifted = y - np.repeat(m, C)
+    y_shifted_exp = np.exp(y_shifted)
+    sum_y_shifted_exp = np.sum(y_shifted_exp)
+    prob = [y_shifted_exp[c] / sum_y_shifted_exp for c in self.legalLabels]
     return prob
