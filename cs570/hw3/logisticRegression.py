@@ -76,27 +76,23 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     """
     N, D = trainingData.shape
     C = len(self.legalLabels)
-    cost = 0
-    grad = (np.zeros((C, D)), np.zeros(self.b.shape))
     XW = np.dot(trainingData, self.W)
     Y = XW + np.tile(self.b, (N, 1))
     m = np.amax(Y, axis=1)
     Y_shifted = Y - np.repeat(m, C).reshape((-1, C))
     Y_shifted_exp = np.exp(Y_shifted)
-    i = 0
-    while i < N:
-      x_i = trainingData[i]
-      label_i = trainingLabels[i]
-      y_shifted_i = Y_shifted[i]
-      y_shifted_exp_i = Y_shifted_exp[i]
-      sum_y_shifted_exp_i = np.sum(y_shifted_exp_i)
-      cost += y_shifted_i[label_i] - np.log(sum_y_shifted_exp_i)
-      for l in self.legalLabels:
-        mu = y_shifted_exp_i[l] / sum_y_shifted_exp_i
-        coeff = mu - (1 if l == label_i else 0)
-        grad[0][l] += coeff * x_i
-        grad[1][l] += coeff
-      i += 1
+    sum_Y_shifted_exp = np.sum(Y_shifted_exp, axis=1)
+    logsum_Y_shifted_exp = np.log(sum_Y_shifted_exp)
+    index_arr = (np.arange(N), trainingLabels)
+    # Compute the NLL cost.
+    nll_terms = Y_shifted[index_arr] - logsum_Y_shifted_exp
+    cost = np.sum(nll_terms)
+    # Compute the gradient.
+    mu = Y_shifted_exp / sum_Y_shifted_exp.reshape((-1, 1))
+    mu[index_arr] -= 1
+    grad_w = np.dot(trainingData.T, mu)
+    grad_b = np.sum(mu, axis=0)
+    grad = (grad_w, grad_b)
 
     return cost, grad
 
@@ -111,7 +107,7 @@ class LogisticRegressionClassifier(classificationMethod.ClassificationMethod):
     Update must include L2 regularization.
     Please note that bias parameter must not be regularized.
     """
-    self.W -= learningRate * (grad[0].T + l2Reg * self.W)
+    self.W -= learningRate * (grad[0] + l2Reg * self.W)
     self.b -= learningRate * grad[1]
 
   def validateWeight(self, validationData, validationLabels):
