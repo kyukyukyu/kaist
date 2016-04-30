@@ -103,18 +103,23 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
 
         Kcs = self.calculateCovariance(trainingData, hyp)
         [t,_] = self.trainingLabels2t(trainingLabels)
-        
-        """
-        You should implement this method:
-        
-        Read README file.
-        """
-        ############ Implement here
-          
-        util.raiseNotDefined()
-        
-        ############ Implement here
-        
+
+        a = np.zeros_like(t)
+        objective_old = None
+        logdet = 0.0
+        while True:
+            ((_, b, logdet, K), _, _) = self.calculateIntermediateValues(t, a,
+                                                                         Kcs)
+            a = np.dot(K, b)
+            exp_a_reshaped = np.exp(a).reshape((c, -1))
+            exp_a_logsums = np.log(np.sum(exp_a_reshaped, 1))
+            summed_term = np.sum(exp_a_logsums)
+            objective = -0.5 * np.dot(b, a) + np.dot(t, a) - summed_term
+            if objective_old is not None and np.isclose(objective,
+                                                        objective_old):
+                break
+        Z = objective - logdet
+
         return a, Z
 
     def calculatePredictiveDistribution(self, datum, pi, Ecs, M, R, tc):
