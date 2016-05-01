@@ -123,16 +123,44 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
         return a, Z
 
     def calculatePredictiveDistribution(self, datum, pi, Ecs, M, R, tc):
-        """
-        You should implement this method:
-
-        Read README file.
-        """
-        ############ Implement here
-
-        util.raiseNotDefined()
-
-        ############ Implement here
+        datum_reshaped = datum.reshape([1, -1])
+        trainingData = self.trainingData
+        legalLabels = self.legalLabels
+        C = len(legalLabels)
+        (n, d) = self.trainingShape
+        # Compute k_(c, n + 1).
+        k_news = [self.covARD(self.hyp[c], trainingData, datum_reshaped)
+                  for c in legalLabels]
+        k_news = np.array(k_news)
+        # Compute k_(c, n + 1, n + 1).
+        k_new_news = [self.covARD(self.hyp[c], datum_reshaped)[0]
+                      for c in legalLabels]
+        # Compute R_c by splitting R.
+        Rcs = R.reshape([-1, n])
+        # Split pi by labels. The shape of this array should be (c, n).
+        pi_cs = pi.reshape([-1, n])
+        # Compute latent test mean. This is equal to extracting diagonal
+        # elements from np.dot(tc.T - pi_cs, k_news) while eliminating
+        # needless computations. Source: http://stackoverflow.com/a/14759273
+        mu = ((tc.T - pi_cs) * k_news.T).sum(-1)
+        # Compute latent test covariance.
+        sigma = np.zeros([C, C])
+        for c in legalLabels:
+            Ec = Ecs[c]
+            k_new_c = k_news[c]
+            Rc = Rcs[c]
+            f = np.dot(Ec, k_new_c)
+            # g := Ec * (Rc * (M.T \ (M \ (Rc.T * f))))
+            g = np.dot(Ec,
+                       np.dot(Rc,
+                              np.linalg.solve(M.T,
+                                              np.linalg.solve(M,
+                                                              np.dot(Rc.T,
+                                                                     f)))))
+            for c_ in legalLabels:
+                sigma[c, c_] = np.dot(g, k_news[c_])
+            sigma[c, c] += k_new_news[c] - np.dot(f, k_new_c)
+        # MC estimate of prediction vector.
         samples = np.random.multivariate_normal(mu.ravel(),sigma,self.numberofsamples)
         predict = softmax(samples)
         return np.mean(predict,0)
