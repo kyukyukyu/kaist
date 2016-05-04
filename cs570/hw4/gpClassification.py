@@ -169,18 +169,18 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
         # Compute k_(c, n + 1).
         k_news = [self.covARD(self.hyp[c], trainingData, datum_reshaped)
                   for c in legalLabels]
-        k_news = np.array(k_news)
+        k_news = np.array(k_news).reshape((C, n))
         # Compute k_(c, n + 1, n + 1).
         k_new_news = [self.covARD(self.hyp[c], datum_reshaped)[0]
                       for c in legalLabels]
-        # Compute R_c by splitting R.
-        Rcs = R.reshape([-1, n])
-        # Split pi by labels. The shape of this array should be (c, n).
+        # Compute R_c by splitting R. This is a list of C n x n arrays.
+        Rcs = [R[(c * n):(c * n + n), :] for c in legalLabels]
+        # Split pi by labels. The shape of this array should be (C, n).
         pi_cs = pi.reshape([-1, n])
         # Compute latent test mean. This is equal to extracting diagonal
-        # elements from np.dot(tc.T - pi_cs, k_news) while eliminating
+        # elements from np.dot(k_news, tc - pi_cs.T) while eliminating
         # needless computations. Source: http://stackoverflow.com/a/14759273
-        mu = ((tc.T - pi_cs) * k_news.T).sum(-1)
+        mu = np.einsum('ij,ji->i', k_news, tc - pi_cs.T)
         # Compute latent test covariance.
         sigma = np.zeros([C, C])
         for c in legalLabels:
