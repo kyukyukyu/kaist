@@ -116,8 +116,9 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
         # Compute b.
         c = np.dot(W, a) + t - pi
         d = np.dot(np.dot(E, K), c)
-        ERMT = np.dot(np.dot(E, R), M.T)
-        b = c - d + linalg_solve(ERMT, linalg_solve(M, np.dot(R.T, d)))
+        ER = np.dot(E, R)
+        b = c - d + np.dot(ER, linalg_solve(M.T,
+                                            linalg_solve(M, np.dot(R.T, d))))
         valuesForModes = [W, b, logdet, K]
         valuesForDerivatives = [E, M, R, b, pi, K]
         valuesForPrediction = [pi, Ecs, M, R, K]
