@@ -6,7 +6,7 @@ Created on Mon Apr 18 2016
 """
 import classificationMethod
 import numpy as np
-import scipy as sp
+import scipy.linalg
 import sys
 import util
 
@@ -161,7 +161,7 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
                 sigma[c, c_] = np.dot(g, k_news[c_])
             sigma[c, c] += k_new_news[c] - np.dot(f, k_new_c)
         # MC estimate of prediction vector.
-        samples = np.random.multivariate_normal(mu.ravel(),sigma,self.numberofsamples)
+        samples = self.numpRng.multivariate_normal(mu.ravel(),sigma,self.numberofsamples)
         predict = softmax(samples)
         return np.mean(predict,0)
 
@@ -361,4 +361,4 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
         return ttot, tc
 
     def block_diag(self, args):
-        return sp.linalg.block_diag(*args)
+        return scipy.linalg.block_diag(*args)
