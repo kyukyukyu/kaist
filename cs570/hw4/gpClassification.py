@@ -104,8 +104,8 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
             I_n = np.identity(n)
             L = np.linalg.cholesky(I_n + np.dot(np.dot(sqrt_D_c, K_c),
                                                 sqrt_D_c))
-            Ecs[c] = linalg_solve(np.dot(sqrt_D_c, L.T),
-                                  linalg_solve(L, sqrt_D_c))
+            Ecs[c] = np.dot(sqrt_D_c, linalg_solve(L.T,
+                                                   linalg_solve(L, sqrt_D_c)))
             logdet += np.sum(np.log(np.diag(L)))
         M = np.linalg.cholesky(np.sum(Ecs, axis=0))
         E = scipy.linalg.block_diag(*Ecs)
