@@ -81,18 +81,43 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
         #print res
 
     def calculateIntermediateValues(self, t, a, Kcs):
-        """
-        You should implement this method:
-
-        Read README file.
-        """
         [n,d] = self.trainingShape
-        c = len(self.legalLabels)
-        ############ Implement here
-
-        util.raiseNotDefined()
-
-        ############ Implement here
+        C = len(self.legalLabels)
+        # Compute pi from a.
+        exp_a = np.exp(a).reshape([-1, n])
+        pi = (exp_a / np.sum(exp_a, 0)).flatten()
+        # Compute K.
+        K = scipy.linalg.block_diag(*Kcs)
+        # Compute D.
+        D = np.diagflat(pi)
+        # Compute M, E, and logdet.
+        logdet = 0
+        Ecs = [None] * C
+        for c in self.legalLabels:
+            cn = c * n
+            D_c = D[cn:(cn + n), cn:(cn + n)]
+            K_c = Kcs[c]
+            sqrt_D_c = scipy.linalg.sqrtm(D_c)
+            I_n = np.ones([n, n])
+            L = np.linalg.cholesky(I_n + np.dot(np.dot(sqrt_D_c, K_c),
+                                                sqrt_D_c))
+            Ecs[c] = linalg_solve(np.dot(sqrt_D_c, L.T),
+                                  linalg_solve(L, sqrt_D_c))
+            logdet += np.sum(np.log(np.diag(L)))
+        M = np.linalg.cholesky(np.sum(Ecs, axis=0))
+        E = scipy.linalg.block_diag(*Ecs)
+        logdet += np.sum(np.log(np.diag(M)))
+        # Compute Pi.
+        Pi = np.dot(D, np.tile(np.identity(n), (C, 1)))
+        # Compute W.
+        W = D - np.dot(Pi, Pi.T)
+        # Compute R.
+        R = np.dot(np.linalg.inv(D), Pi)
+        # Compute b.
+        c = np.dot(W, a) + t - pi
+        d = np.dot(np.dot(E, K), c)
+        ERMT = np.dot(np.dot(E, R), M.T)
+        b = c - d + linalg_solve(ERMT, linalg_solve(M, np.dot(R.T, d)))
         valuesForModes = [W, b, logdet, K]
         valuesForDerivatives = [E, M, R, b, pi, K]
         valuesForPrediction = [pi, Ecs, M, R, K]
