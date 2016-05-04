@@ -193,8 +193,7 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
                        np.dot(Rc,
                               linalg_solve(M.T,
                                            linalg_solve(M, np.dot(Rc.T, f)))))
-            for c_ in legalLabels:
-                sigma[c, c_] = np.dot(g, k_news[c_])
+            sigma[c] = np.dot(k_news, g)
             sigma[c, c] += k_new_news[c] - np.dot(f, k_new_c)
         # MC estimate of prediction vector.
         samples = self.numpRng.multivariate_normal(mu.ravel(),sigma,self.numberofsamples)
