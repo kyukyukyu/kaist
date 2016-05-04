@@ -155,6 +155,7 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
             if objective_old is not None and np.isclose(objective,
                                                         objective_old):
                 break
+            objective_old = objective
         Z = objective - logdet
 
         return a, Z
