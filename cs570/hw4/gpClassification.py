@@ -101,7 +101,7 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
             D_c = D[cn:(cn + n), cn:(cn + n)]
             K_c = Kcs[c]
             sqrt_D_c = scipy.linalg.sqrtm(D_c)
-            I_n = np.ones([n, n])
+            I_n = np.identity(n)
             L = np.linalg.cholesky(I_n + np.dot(np.dot(sqrt_D_c, K_c),
                                                 sqrt_D_c))
             Ecs[c] = linalg_solve(np.dot(sqrt_D_c, L.T),
