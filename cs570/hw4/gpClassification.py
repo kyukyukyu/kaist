@@ -9,6 +9,7 @@ import numpy as np
 import scipy.linalg
 import sys
 import util
+linalg_solve = np.linalg.solve
 
 def softmax(X):
     e = np.exp(X - np.max(X))
@@ -153,10 +154,8 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
             # g := Ec * (Rc * (M.T \ (M \ (Rc.T * f))))
             g = np.dot(Ec,
                        np.dot(Rc,
-                              np.linalg.solve(M.T,
-                                              np.linalg.solve(M,
-                                                              np.dot(Rc.T,
-                                                                     f)))))
+                              linalg_solve(M.T,
+                                           linalg_solve(M, np.dot(Rc.T, f)))))
             for c_ in legalLabels:
                 sigma[c, c_] = np.dot(g, k_news[c_])
             sigma[c, c] += k_new_news[c] - np.dot(f, k_new_c)
