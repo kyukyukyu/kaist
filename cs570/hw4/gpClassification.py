@@ -83,6 +83,9 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
     def calculateIntermediateValues(self, t, a, Kcs):
         [n,d] = self.trainingShape
         C = len(self.legalLabels)
+        # Flatten t and a into 1D array.
+        t = t.flatten()
+        a = a.flatten()
         # Compute pi from a.
         exp_a = np.exp(a).reshape([-1, n])
         pi = (exp_a / np.sum(exp_a, 0)).flatten()
@@ -119,6 +122,9 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
         ER = np.dot(E, R)
         b = c - d + np.dot(ER, linalg_solve(M.T,
                                             linalg_solve(M, np.dot(R.T, d))))
+        # Reshape 1D array variables.
+        b = b.reshape((-1, 1))
+        pi = pi.reshape((-1, 1))
         valuesForModes = [W, b, logdet, K]
         valuesForDerivatives = [E, M, R, b, pi, K]
         valuesForPrediction = [pi, Ecs, M, R, K]
@@ -130,6 +136,7 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
 
         Kcs = self.calculateCovariance(trainingData, hyp)
         [t,_] = self.trainingLabels2t(trainingLabels)
+        t_ = t.flatten()
 
         a = np.zeros_like(t)
         objective_old = None
@@ -138,10 +145,13 @@ class gaussianProcessClassifier(classificationMethod.ClassificationMethod):
             ((_, b, logdet, K), _, _) = self.calculateIntermediateValues(t, a,
                                                                          Kcs)
             a = np.dot(K, b)
+            # Flatten b and a for convenience.
+            b = b.flatten()
+            a = a.flatten()
             exp_a_reshaped = np.exp(a).reshape((c, -1))
             exp_a_logsums = np.log(np.sum(exp_a_reshaped, 1))
             summed_term = np.sum(exp_a_logsums)
-            objective = -0.5 * np.dot(b, a) + np.dot(t, a) - summed_term
+            objective = -0.5 * np.dot(b, a) + np.dot(t_, a) - summed_term
             if objective_old is not None and np.isclose(objective,
                                                         objective_old):
                 break
