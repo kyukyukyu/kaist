@@ -1,0 +1,10 @@
+# DOS-style newlines with a newline ending every file
+[*]
+end_of_line = crlf
+insert_final_newline = true
+
+# Configuration for Python code files
+[*.py]
+# Finally, the TA started to use 4-space indents.
+indent_style = space
+indent_size = 4
