@@ -152,7 +152,6 @@ class SupportVectorMachine(classificationMethod.ClassificationMethod):
 
     def predictSVM(self, x, supportMultipliers, supportVectors, supportVectorLabels, bias, kernel):
         """
-        Fill in this function!
         x : test datum. D-sized numpy array.
         supportMulutipliers : Lagrange multipliers whose values are larger than some threshold (1e-5). M-sized numpy array.
         supportVectors : Support vectors. (M x D)-sized numpy array.
@@ -165,8 +164,8 @@ class SupportVectorMachine(classificationMethod.ClassificationMethod):
         OUTPUT : Prediction result. The output should be +1 or -1 (scalar).
         """
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
-        return 1
-
+        a_T = supportMultipliers.reshape((1, -1))
+        labels_diag = np.diag(supportVectorLabels)
+        k = np.array([kernel(x_n, x) for x_n in supportVectors])
+        y = np.dot(np.dot(a_T, labels_diag), k) + bias
+        return 1 if y > 0 else -1
