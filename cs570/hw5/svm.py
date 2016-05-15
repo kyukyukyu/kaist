@@ -109,17 +109,16 @@ class SupportVectorMachine(classificationMethod.ClassificationMethod):
         """
 
         N, D = X.shape
-        t_ = t.reshape((-1, 1))
+        t_T = t.reshape((1, -1))
         K = np.array([[kernel(x_n, x_m) for x_m in X] for x_n in X])
-        P = np.dot(t_, t_.T) * K
+        P = np.dot(t_T.T, t_T) * K
         q = np.empty(N)
         q.fill(-1)
-        G = np.identity(N)
-        h = np.empty(N)
-        h.fill(C)
-        A = np.zeros((N, N))
-        A[0] = t
-        b = np.zeros((N, 1))
+        G = np.vstack((np.identity(N), -np.identity(N)))
+        h = np.zeros(2 * N)
+        h[:N] = C
+        A = t_T
+        b = np.zeros(N)
 
         return self.quadraticProgrammingSolver(P, q, G, h, A, b).flatten()
 
