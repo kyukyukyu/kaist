@@ -69,7 +69,7 @@ class SupportVectorMachine(classificationMethod.ClassificationMethod):
         minimize (1/2) x^T P x + q^T x
         s.t. Gx <= h
               Ax = b
-              
+
         OUTPUT : solution 'x'.
 
         * Do not modify this method *
@@ -97,7 +97,6 @@ class SupportVectorMachine(classificationMethod.ClassificationMethod):
 
     def trainSVM(self, X, t, C, kernel):
         """
-        Fill in this function!
         X : (N x D)-sized numpy array
         t : N-sized numpy array. t[i] = -1 or +1
         C : Slack variable penalty parameter
@@ -109,11 +108,20 @@ class SupportVectorMachine(classificationMethod.ClassificationMethod):
         OUTPUT : Lagrange multipliers 'a_1,...,a_N'. N-sized Numpy array
         """
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
         N, D = X.shape
+        t_ = t.reshape((-1, 1))
+        K = np.array([[kernel(x_n, x_m) for x_m in X] for x_n in X])
+        P = np.dot(t_, t_.T) * K
+        q = np.empty(N)
+        q.fill(-1)
+        G = np.identity(N)
+        h = np.empty(N)
+        h.fill(C)
+        A = np.zeros((N, N))
+        A[0] = t
+        b = np.zeros((N, 1))
 
-        return np.zeros(N)
+        return self.quadraticProgrammingSolver(P, q, G, h, A, b).flatten()
 
     def classify(self, testData):
         """
@@ -142,7 +150,7 @@ class SupportVectorMachine(classificationMethod.ClassificationMethod):
             self.counts.append(count)
 
         return guesses
-        
+
     def predictSVM(self, x, supportMultipliers, supportVectors, supportVectorLabels, bias, kernel):
         """
         Fill in this function!
