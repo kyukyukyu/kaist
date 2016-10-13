@@ -1,6 +1,8 @@
 #define HASH_LENGTH 256
+#define HMAC_LSH_KEY "Sunday morning rain is falling, steal some covers share some skin"
 
 #include "sha256/KISA_SHA256.h"
+#include "lsh/include/hmac.h"
 #include "lsh/include/lsh.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +51,22 @@ int main(int argc, const char* argv[]) {
     print_hash("LSH", yyyymmdd, h2, 1);
 
     print_hdist(h1, h2);
+
+    hmac_lsh_digest(LSH_MAKE_TYPE(0, HASH_LENGTH),
+            (const lsh_u8 *) HMAC_LSH_KEY,
+            sizeof(HMAC_LSH_KEY),
+            (lsh_u8 *) &yyyymmdd,
+            sizeof(yyyymmdd),
+            h1);
+    print_hash("HMAC_{LSH512_256}", yyyymmdd, h1, 0);
+
+    hmac_lsh_digest(LSH_MAKE_TYPE(0, HASH_LENGTH),
+            (const lsh_u8 *) HMAC_LSH_KEY,
+            sizeof(HMAC_LSH_KEY),
+            (lsh_u8 *) &yyyymmdd_1,
+            sizeof(yyyymmdd_1),
+            h2);
+    print_hash("HMAC_{LSH512_256}", yyyymmdd, h2, 1);
 
     return 0;
 }
