@@ -13,6 +13,7 @@ int print_hash(const char *algorithm, unsigned int pt, unsigned char *ht,
         int xor);
 int print_hdist(unsigned char *ht1, unsigned char *ht2);
 void generate_randbytes(unsigned char *randbytes, size_t len);
+void get_monotonic_time(struct timespec *tp);
 void compute_clockdiff(struct timespec *tp_a, struct timespec *tp_b,
         struct timespec *tp_diff);
 
@@ -59,9 +60,9 @@ void confirm_timing_attack_security() {
     for (i = 1; i <= 100; ++i) {
         generate_randbytes(randbytes, RANDOM_BYTES_LENGTH);
         printf("Hashing the string #%d... ", i);
-        clock_gettime(CLOCK_MONOTONIC, &tp_a);
+        get_monotonic_time(&tp_a);
         SHA3_256(h, randbytes, RANDOM_BYTES_LENGTH);
-        clock_gettime(CLOCK_MONOTONIC, &tp_b);
+        get_monotonic_time(&tp_b);
         compute_clockdiff(&tp_a, &tp_b, &tp_diff);
         printf("done in %ld second(s) %ld nanosecond(s).\n", tp_diff.tv_sec,
                 tp_diff.tv_nsec);
@@ -122,6 +123,27 @@ void generate_randbytes(unsigned char *randbytes, size_t len) {
             (*((long *) randbytes) & ~mask) |   // Existing bits preserved.
             (randnum & mask);                   // Random bits come in.
     }
+}
+
+// Workaround for missing clock_gettime() in macOS prior to 10.12.
+// Source: https://gist.github.com/jbenet/1087739
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
+void get_monotonic_time(struct timespec *tp) {
+#ifdef __MACH__
+	clock_serv_t cclock;
+	mach_timespec_t mts;
+	host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
+	clock_get_time(cclock, &mts);
+	mach_port_deallocate(mach_task_self(), cclock);
+	tp->tv_sec = mts.tv_sec;
+	tp->tv_nsec = mts.tv_nsec;
+#else
+    clock_gettime(CLOCK_MONOTONIC, tp);
+#endif
 }
 
 // Precondition: tp_b is later than tp_a.
