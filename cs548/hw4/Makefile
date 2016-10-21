@@ -1,8 +1,11 @@
 CC=gcc
-# Assuming x86_64 which is little endian.
-CFLAGS=-g -c -Wall -DUSER_LITTLE_ENDIAN
+CFLAGS=-g -c -Wall
 LDFLAGS=
-SOURCES=main.c $(wildcard sha256/*.c lsh/src/*.c)
+KECCAK_PACK=generic64_libkeccak.a.tar.gz
+KECCAK_DIR=keccak
+KECCAK_SRCDIR=$(KECCAK_DIR)/generic64/libkeccak.a
+KECCAK_SOURCES=$(wildcard $(KECCAK_DIR)/*.c)
+SOURCES=main.c $(KECCAK_SOURCES)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 EXECUTABLE=main
 
@@ -11,6 +14,11 @@ all: $(SOURCES) $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
+$(KECCAK_SOURCES): $(KECCAK_PACK)
+	mkdir -p $(KECCAK_DIR)
+	tar xzf $(KECCAK_PACK) -C $(KECCAK_DIR)/
+	mv $(KECCAK_SRCDIR)/* $(KECCAK_DIR)/
+
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
 
@@ -18,3 +26,4 @@ $(EXECUTABLE): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS)
+	rm -rf $(KECCAK_DIR)
