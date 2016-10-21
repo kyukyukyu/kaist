@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -c -Wall
+CFLAGS=-g -c -Wall -lrt
 LDFLAGS=
 KECCAK_PACK=generic64_libkeccak.a.tar.gz
 KECCAK_DIR=keccak
