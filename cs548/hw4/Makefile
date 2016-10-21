@@ -1,20 +1,23 @@
 CC=gcc
-CFLAGS=-g -c -Wall -lrt
+CFLAGS=-c -Wall -lrt
 LDFLAGS=
 KECCAK_PACK=generic64_libkeccak.a.tar.gz
 KECCAK_DIR=keccak
 KECCAK_SRCDIR=$(KECCAK_DIR)/generic64/libkeccak.a
-KECCAK_SOURCES=$(wildcard $(KECCAK_DIR)/*.c)
+KECCAK_SOURCES=$(subst generic64/libkeccak.a/,$(KECCAK_DIR)/, \
+	$(filter %.c, \
+		$(filter-out %/, \
+			$(shell tar tzf $(KECCAK_PACK)))))
 SOURCES=main.c $(KECCAK_SOURCES)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 EXECUTABLE=main
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(KECCAK_DIR) $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
-$(KECCAK_SOURCES): $(KECCAK_PACK)
+$(KECCAK_DIR):
 	mkdir -p $(KECCAK_DIR)
 	tar xzf $(KECCAK_PACK) -C $(KECCAK_DIR)/
 	mv $(KECCAK_SRCDIR)/* $(KECCAK_DIR)/
