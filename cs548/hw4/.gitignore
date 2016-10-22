@@ -1,0 +1,9 @@
+# Binary files.
+main
+**/*.o
+
+# Keccak source files extracted from the package.
+keccak/
+
+# README file in PDF format.
+README.pdf
